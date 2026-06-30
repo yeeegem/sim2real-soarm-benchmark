@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Generated data + training artifacts (large)
+recordings/
+runs/
+outputs/
+wandb/
+
+# Rendered debug artifacts
+*.gif
+debug_frames/
+scratch/
+
+# OS
+.DS_Store

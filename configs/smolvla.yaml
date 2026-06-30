@@ -1,0 +1,24 @@
+# SmolVLA finetune hyperparameters (documentation; scripts/train_smolvla.sh
+# passes these as lerobot-train flags). Scaffold for a later iteration -- ACT is
+# the primary policy. Mirrors the sibling smolvla-soarm-benchmark finetune.
+
+policy:
+  path: lerobot/smolvla_base   # finetune from the 450M pretrained checkpoint
+  empty_cameras: 1             # pad the missing 3rd camera SmolVLA base expects
+  device: cuda
+
+# SmolVLA wants camera1/camera2; our dataset stores front/wrist, so rename them.
+rename_map:
+  observation.images.front: observation.images.camera1
+  observation.images.wrist: observation.images.camera2
+
+training:
+  steps: 20000
+  batch_size: 32
+  save_freq: 2000
+  seed: 42
+
+dataset:
+  repo_id: sim/sim_redcubes_bluecup
+  root: recordings/sim_redcubes_bluecup
+  fps: 30

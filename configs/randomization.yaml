@@ -1,0 +1,35 @@
+# Domain randomization ranges, applied per episode before recording, to bridge
+# the sim->real visual/dynamics gap. Centers come from configs/scene.yaml.
+
+enabled: true
+
+lighting:
+  diffuse: [0.45, 0.9]    # per-light diffuse scalar (applied to r=g=b)
+  ambient: [0.1, 0.4]     # global ambient scalar
+  pos_jitter: [0.25, 0.25, 0.15]   # +/- metres on each light position
+
+# Per-channel additive jitter (+/-) around the scene.yaml base colours, clipped
+# to [0,1]. Kept small enough that red stays red and blue stays blue.
+color_jitter:
+  cube: 0.07
+  cup: 0.10
+  table: 0.06
+  wall: 0.05
+
+camera:
+  front:
+    pos_jitter: [0.04, 0.04, 0.03]
+    lookat_jitter: [0.03, 0.03, 0.02]
+    fovy_jitter: 4.0
+  wrist:
+    pos_jitter: [0.006, 0.006, 0.006]
+    fovy_jitter: 5.0
+
+physics:
+  cube_friction: [0.6, 1.2]     # tangential friction sampled per episode
+  cube_mass_scale: [0.8, 1.3]   # multiplies the nominal cube mass
+
+# Gaussian noise added to recorded proprioceptive state / actions (degrees,
+# gripper units) to mimic the real arm's noisy encoders.
+observation_noise_deg: 0.5
+action_noise_deg: 0.0

@@ -1,0 +1,84 @@
+# Static scene geometry for the MuJoCo SO-ARM101 pick-and-place rig.
+# Lengths in metres, angles in degrees. These are the DR *center* values;
+# configs/randomization.yaml jitters around them per episode.
+#
+# Frame: arm base at origin, table top at z=0, arm reaches toward +x.
+# Left cube = +y, right cube = -y (a fixed labelling for the mode-balance metric).
+
+table:
+  # Gray-blue table top, top surface at z=0. The robot sits at the NEAR edge
+  # (base at x=0) and reaches out across the table toward +x.
+  half_x: 0.30          # spans x in [center_x - half_x, center_x + half_x] = [0, 0.60]
+  half_y: 0.32
+  thickness: 0.04
+  center_x: 0.30        # near edge at the robot base, far edge at x=0.60
+  rgba: [0.32, 0.40, 0.50, 1.0]   # gray-blue
+
+walls:
+  # White walls the cameras see: in FRONT of the robot (far +x edge) and on the
+  # left/right edges. The operator/near side (behind the robot) is open.
+  rgba: [0.92, 0.93, 0.95, 1.0]
+  height: 0.55
+  thickness: 0.02
+  front_x: 0.60         # wall at the far edge, in front of the robot
+  side_y: 0.32          # +/- side walls at the table edges
+
+robot:
+  # The real SO-ARM101 is printed white (motors stay dark). Recolour the
+  # vendored MJCF's printed parts (originally yellow) to this.
+  arm_rgba: [0.90, 0.90, 0.92, 1.0]
+
+cubes:
+  size: 0.015           # half-extent => 3 cm cube
+  mass: 0.020
+  rgba: [0.80, 0.10, 0.10, 1.0]   # red (DR center)
+  friction: [1.0, 0.02, 0.001]
+  z: 0.015              # rests on the table
+  # Sampling regions (metres) for left (+y) and right (-y) cubes.
+  x_range: [0.20, 0.30]
+  left_y_range: [0.07, 0.14]
+  right_y_range: [-0.14, -0.07]
+
+cup:
+  # Procedural wall-ring: bottom disk + n_segments thin box walls.
+  inner_radius: 0.035
+  wall_thickness: 0.005
+  height: 0.070
+  bottom_thickness: 0.005
+  n_segments: 20
+  rgba: [0.10, 0.20, 0.80, 1.0]   # plastic blue (DR center)
+  bottom_mass: 0.030
+  wall_mass: 0.0006     # per segment
+  friction: [1.0, 0.02, 0.001]
+  # Cup placement region (metres). Center-ish, in front of the arm.
+  x_range: [0.24, 0.30]
+  y_range: [-0.04, 0.04]
+
+cameras:
+  width: 640
+  height: 480
+  front:
+    # "Front" on the real rig is a TOP-mounted camera: high above the workspace
+    # centre looking down, so both cubes + the cup stay framed and the arm
+    # enters from the near edge (the back of the table).
+    pos: [0.27, 0.0, 0.58]
+    lookat: [0.27, 0.0, 0.0]
+    fovy: 64
+  wrist:
+    # Attached to the gripper on a side bracket (clears the bulky motor), looking
+    # forward + down at the grasp point / workspace ahead of the fingers.
+    parent_body: gripper
+    pos: [0.004, -0.054, 0.090]
+    lookat_local: [0.044, -0.013, -0.025]
+    fovy: 75
+
+init_pose:
+  # Arm home pose in LeRobot units (degrees for joints 1-5, RANGE_0_100 gripper).
+  # Mid-ish of the observed dataset ranges; the expert returns here between picks.
+  state: [-12.0, -25.0, 20.0, 70.0, 2.0, 40.0]
+
+lights:
+  - pos: [0.2, 0.2, 0.8]
+    dir: [-0.1, -0.1, -1.0]
+  - pos: [0.2, -0.2, 0.8]
+    dir: [-0.1, 0.1, -1.0]
