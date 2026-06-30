@@ -23,7 +23,20 @@ import numpy as np
 
 from sim2real_soarm.sim.scene import Layout, Scene
 
-LAYOUT = Layout((0.25, 0.10), (0.25, -0.10), (0.27, 0.0), target="left")
+
+def _layout_from_cfg(cfg) -> Layout:
+    """A representative layout at the midpoints of the configured ranges, so the
+    preview always reflects configs/scene.yaml (cube/cup placement)."""
+    def mid(rng):
+        return (rng[0] + rng[1]) / 2
+
+    cu, cp = cfg["cubes"], cfg["cup"]
+    return Layout(
+        cube_left_xy=(mid(cu["x_range"]), mid(cu["left_y_range"])),
+        cube_right_xy=(mid(cu["x_range"]), mid(cu["right_y_range"])),
+        cup_xy=(mid(cp["x_range"]), mid(cp["y_range"])),
+        target="left",
+    )
 
 
 def _pose_grasp(scene: Scene):
@@ -56,7 +69,7 @@ def main(argv=None):
         import mujoco.viewer
 
         scene = Scene(make_renderer=False)
-        scene.reset(LAYOUT)
+        scene.reset(_layout_from_cfg(scene.cfg))
         if args.pose == "grasp":
             _pose_grasp(scene)
         print("Opening viewer. In the right panel, expand 'Rendering' -> 'Camera' "
@@ -69,7 +82,7 @@ def main(argv=None):
     import imageio.v3 as iio
 
     scene = Scene()
-    scene.reset(LAYOUT)
+    scene.reset(_layout_from_cfg(scene.cfg))
     if args.pose == "grasp":
         _pose_grasp(scene)
 

@@ -34,8 +34,9 @@ cubes:
   rgba: [0.80, 0.10, 0.10, 1.0]   # red (DR center)
   friction: [1.0, 0.02, 0.001]
   z: 0.015              # rests on the table
-  # Sampling regions (metres) for left (+y) and right (-y) cubes.
-  x_range: [0.20, 0.30]
+  # Sampling regions (metres) for left (+y) and right (-y) cubes. Smaller x =
+  # closer to the arm; the cup sits farther out (see cup.x_range).
+  x_range: [0.17, 0.23]
   left_y_range: [0.07, 0.14]
   right_y_range: [-0.14, -0.07]
 
@@ -51,7 +52,7 @@ cup:
   wall_mass: 0.0006     # per segment
   friction: [1.0, 0.02, 0.001]
   # Cup placement region (metres). Center-ish, in front of the arm.
-  x_range: [0.24, 0.30]
+  x_range: [0.30, 0.36]
   y_range: [-0.04, 0.04]
 
 cameras:

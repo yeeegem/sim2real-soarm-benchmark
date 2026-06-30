@@ -155,10 +155,21 @@ class Scene:
         )
         wcam = cam["wrist"]
         parent = spec.body(wcam["parent_body"])
+        wpos = np.asarray(wcam["pos"], float)
+        wquat = _quat_lookat(wpos, wcam["lookat_local"])
         parent.add_camera(
-            name="wrist", pos=wcam["pos"],
-            quat=_quat_lookat(wcam["pos"], wcam["lookat_local"]),
+            name="wrist", pos=wpos, quat=wquat,
             fovy=wcam["fovy"], resolution=[cam["width"], cam["height"]],
+        )
+        # Visible camera-module mount (so you can see where the wrist cam sits).
+        # Offset just behind the lens along -view_dir so it doesn't block the view.
+        view_dir = np.asarray(wcam["lookat_local"], float) - wpos
+        view_dir /= np.linalg.norm(view_dir)
+        parent.add_geom(
+            name="wrist_cam_mount", type=mj.mjtGeom.mjGEOM_BOX,
+            pos=(wpos - 0.018 * view_dir).tolist(), quat=wquat,
+            size=[0.013, 0.018, 0.010], rgba=[0.05, 0.05, 0.05, 1.0],
+            contype=0, conaffinity=0, group=2,
         )
 
         # True grasp point (between the fingers). The stock ``gripperframe`` site
