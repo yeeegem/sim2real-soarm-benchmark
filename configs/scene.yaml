@@ -75,8 +75,10 @@ cameras:
 
 init_pose:
   # Arm home pose in LeRobot units (degrees for joints 1-5, RANGE_0_100 gripper).
-  # Mid-ish of the observed dataset ranges; the expert returns here between picks.
-  state: [-12.0, -25.0, 20.0, 70.0, 2.0, 40.0]
+  # shoulder_pan=0 and wrist_roll=0 -> the arm points straight down the middle
+  # (y=0); the expert returns here between picks.
+  # (Converted from the MuJoCo radians [0, -1.78, 1.49, 1.22, 0, -0.127].)
+  state: [0.0, -102.0, 85.4, 69.9, 0.0, 2.5]
 
 lights:
   - pos: [0.2, 0.2, 0.8]
