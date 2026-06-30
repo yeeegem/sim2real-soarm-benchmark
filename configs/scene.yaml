@@ -11,7 +11,7 @@ table:
   half_x: 0.30          # spans x in [center_x - half_x, center_x + half_x] = [0, 0.60]
   half_y: 0.32
   thickness: 0.04
-  center_x: 0.30        # near edge at the robot base, far edge at x=0.60
+  center_x: 0.28        # near edge at the robot base, far edge at x=0.60
   rgba: [0.32, 0.40, 0.50, 1.0]   # gray-blue
 
 walls:
@@ -66,11 +66,11 @@ cameras:
     lookat: [0.27, 0.0, 0.0]
     fovy: 64
   wrist:
-    # Attached to the gripper on a side bracket (clears the bulky motor), looking
+    # Black camera module mounted on the LEFT side of the white wrist, looking
     # forward + down at the grasp point / workspace ahead of the fingers.
     parent_body: gripper
-    pos: [0.004, -0.054, 0.090]
-    lookat_local: [0.044, -0.013, -0.025]
+    pos: [0.004, 0.054, 0.090]
+    lookat_local: [0.044, 0.013, -0.025]
     fovy: 75
 
 init_pose:
