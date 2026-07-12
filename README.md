@@ -6,8 +6,8 @@ sibling real-data benchmarks, so the numbers drop straight into the same compari
 
 | Repo | Data source | Policy | Eval |
 |---|---|---|---|
-| [`multimodal-manipulation-benchmark`](../multimodal-manipulation-benchmark) | real demos | Diffusion Policy | Tier-A operator |
-| [`smolvla-soarm-benchmark`](../smolvla-soarm-benchmark) | real demos | SmolVLA | `soarm_eval` Tier-A operator |
+| [`multimodal-manipulation-benchmark`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | Tier-A operator |
+| [`smolvla-soarm-benchmark`](https://github.com/yeeegem/smolvla-soarm-benchmark) | real demos | SmolVLA | `soarm_eval` Tier-A operator |
 | **this repo** | **MuJoCo sim only** | LeRobot ACT (SmolVLA scaffolded) | `soarm_eval` Tier-A operator |
 
 ## The task

@@ -52,6 +52,7 @@ def record(
     seed: int = 0,
     use_dr: bool = True,
     max_attempts: int | None = None,
+    overwrite: bool = False,
     n_substeps: int = 17,
 ) -> dict:
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
@@ -61,6 +62,19 @@ def record(
     from sim2real_soarm.sim.scene import Scene
 
     out = Path(out)
+    # Check before building the scene: LeRobot's create() requires a fresh dir,
+    # and doing this first keeps the error path clean (no renderer to tear down).
+    if out.exists():
+        if overwrite:
+            import shutil
+            shutil.rmtree(out)
+            print(f"Removed existing {out} (--overwrite).")
+        else:
+            raise SystemExit(
+                f"Output dir already exists: {out}\n"
+                f"  Pass --overwrite to replace it, or use a different --out."
+            )
+
     scene = Scene()
     expert = ScriptedExpert(scene)
     dr = DomainRandomizer(scene) if use_dr else None
@@ -135,11 +149,13 @@ def main(argv=None):
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--no-dr", action="store_true", help="disable domain randomization")
     p.add_argument("--max-attempts", type=int, default=None)
+    p.add_argument("--overwrite", action="store_true",
+                   help="replace the output dir if it already exists")
     args = p.parse_args(argv)
     record(
         num_episodes=args.num_episodes, out=Path(args.out), repo_id=args.repo_id,
         task=args.task, seed=args.seed, use_dr=not args.no_dr,
-        max_attempts=args.max_attempts,
+        max_attempts=args.max_attempts, overwrite=args.overwrite,
     )
 
 

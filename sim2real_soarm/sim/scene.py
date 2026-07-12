@@ -194,9 +194,12 @@ class Scene:
             contype=0, conaffinity=0, group=2,
         )
 
-        # True grasp point (between the fingers). The stock ``gripperframe`` site
-        # sits ~7.6 cm beyond the fingers, so IK must target this instead.
-        spec.body("gripper").add_site(name="tcp", pos=[0.017, 0.0, -0.022])
+        # Grasp reference at the FINGERTIP (the lowest gripper vertex). Targeting
+        # the fingertip at a table cube keeps the rest of the gripper above the
+        # table (~+20 mm clearance); targeting a point between the finger bases
+        # instead would drive the long fingers ~65 mm through the table, which is
+        # unsafe to reproduce on real hardware.
+        spec.body("gripper").add_site(name="tcp", pos=[-0.012, 0.0, -0.104])
 
         # Inactive welds used to model a reliable grasp (see attach/detach):
         # frictional grasping of a 3 cm cube is unreliable with this gripper's
