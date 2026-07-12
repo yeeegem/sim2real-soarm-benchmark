@@ -11,7 +11,7 @@ table:
   half_x: 0.30          # spans x in [center_x - half_x, center_x + half_x] = [0, 0.60]
   half_y: 0.32
   thickness: 0.04
-  center_x: 0.30        # near edge at the robot base, far edge at x=0.60
+  center_x: 0.28        # near edge at the robot base, far edge at x=0.60
   rgba: [0.32, 0.40, 0.50, 1.0]   # gray-blue
 
 walls:
@@ -66,17 +66,26 @@ cameras:
     lookat: [0.27, 0.0, 0.0]
     fovy: 64
   wrist:
-    # Attached to the gripper on a side bracket (clears the bulky motor), looking
-    # forward + down at the grasp point / workspace ahead of the fingers.
+    # Community-standard SO101 wrist camera, taken verbatim from gym-soarm
+    # (32x32 UVC module on the hex-nut wrist mount, tilted ~35 deg toward the
+    # fingers). pos/quat are in the gripper body's local frame, which is
+    # byte-identical to our vendored MJCF, so they transfer directly.
     parent_body: gripper
-    pos: [0.004, -0.054, 0.090]
-    lookat_local: [0.044, -0.013, -0.025]
-    fovy: 75
+    pos: [0.0, 0.074, -0.008]     # +y = left side of the wrist (flip sign for right)
+    quat: [0.965, -0.2579, -0.0206, -0.0421]
+    fovy: 70
+    # Visible white printed hex-nut mount (official SO101 STL). Its pose in the
+    # gripper local frame; tweak to clamp the wrist exactly.
+    mount:
+      pos: [-0.018, 0.0238, -0.0411]
+      quat: [-0.4883, 0.4922, -0.477, 0.5401]
 
 init_pose:
   # Arm home pose in LeRobot units (degrees for joints 1-5, RANGE_0_100 gripper).
-  # Mid-ish of the observed dataset ranges; the expert returns here between picks.
-  state: [-12.0, -25.0, 20.0, 70.0, 2.0, 40.0]
+  # shoulder_pan=0 and wrist_roll=0 -> the arm points straight down the middle
+  # (y=0); the expert returns here between picks.
+  # (Converted from the MuJoCo radians [0, -1.78, 1.49, 1.22, 0, -0.127].)
+  state: [0.0, -102.0, 85.4, 69.9, 0.0, 2.5]
 
 lights:
   - pos: [0.2, 0.2, 0.8]

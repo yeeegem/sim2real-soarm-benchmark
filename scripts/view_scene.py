@@ -39,8 +39,8 @@ def _layout_from_cfg(cfg) -> Layout:
     )
 
 
-def _pose_grasp(scene: Scene):
-    """Pose the arm with its gripper at the left cube (so the wrist cam frames it)."""
+def _pose_grasp(scene: Scene, layout: Layout):
+    """Pose the arm with its gripper at the (configured) left cube."""
     import mujoco
 
     from sim2real_soarm.sim import ik, kinematics as K
@@ -50,7 +50,8 @@ def _pose_grasp(scene: Scene):
     sc = mujoco.MjData(scene.model)
     sc.qpos[:6] = home
     mujoco.mj_forward(scene.model, sc)
-    q5 = ik.solve_ik(scene.model, sc, tcp, np.array([0.25, 0.10, 0.02]), None,
+    cx, cy = layout.cube_left_xy
+    q5 = ik.solve_ik(scene.model, sc, tcp, np.array([cx, cy, 0.02]), None,
                      ori_weight=1e-6, damping=0.05)
     scene.set_arm_state(np.append(K.qpos_to_state(np.append(q5, 0.0))[:5], 42.0))
 
@@ -69,9 +70,10 @@ def main(argv=None):
         import mujoco.viewer
 
         scene = Scene(make_renderer=False)
-        scene.reset(_layout_from_cfg(scene.cfg))
+        layout = _layout_from_cfg(scene.cfg)
+        scene.reset(layout)
         if args.pose == "grasp":
-            _pose_grasp(scene)
+            _pose_grasp(scene, layout)
         print("Opening viewer. In the right panel, expand 'Rendering' -> 'Camera' "
               "and pick 'front' or 'wrist' to see the policy's views. Close the "
               "window to exit.")
@@ -82,9 +84,10 @@ def main(argv=None):
     import imageio.v3 as iio
 
     scene = Scene()
-    scene.reset(_layout_from_cfg(scene.cfg))
+    layout = _layout_from_cfg(scene.cfg)
+    scene.reset(layout)
     if args.pose == "grasp":
-        _pose_grasp(scene)
+        _pose_grasp(scene, layout)
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -99,8 +102,10 @@ def main(argv=None):
     cam = scene.cfg["cameras"]
     print(f"Wrote {out}/front.png, wrist.png, overview.png")
     print("\nConfigured camera poses (configs/scene.yaml -> cameras):")
+    w = cam["wrist"]
+    aim = f"quat={w['quat']}" if "quat" in w else f"lookat_local={w['lookat_local']}"
     print(f"  front: pos={cam['front']['pos']} lookat={cam['front']['lookat']} fovy={cam['front']['fovy']}")
-    print(f"  wrist: pos(local)={cam['wrist']['pos']} lookat_local={cam['wrist']['lookat_local']} fovy={cam['wrist']['fovy']}")
+    print(f"  wrist: pos(local)={w['pos']} {aim} fovy={w['fovy']}")
 
 
 if __name__ == "__main__":
