@@ -67,12 +67,16 @@ class ScriptedExpert:
 
     # -- IK at a world pose, warm-started from a scratch state ----------------
 
-    def _ik_arm(self, scratch, pos) -> np.ndarray:
-        # Position-only IK: the long gripper cannot hold a strict vertical
-        # approach to a low cube, and the weld grasp makes orientation moot.
+    def _ik_arm(self, scratch, pos, vertical: bool = True) -> np.ndarray:
+        # Vertical top-down grasp: keep the claws pointing straight down (the
+        # gripper's tool axis aligned with world -Z, i.e. the fingertip-site frame
+        # aligned with world). This is a stable grasp and, because we target the
+        # fingertip, it stays well above the table. ``vertical=False`` falls back
+        # to position-only IK.
+        target_mat = np.eye(3) if vertical else None
         return ik.solve_ik(
             self.scene.model, scratch, self._sid, np.asarray(pos, float),
-            target_mat=None, ori_weight=1e-6, damping=0.05,
+            target_mat=target_mat, ori_weight=0.5 if vertical else 1e-6, damping=0.04,
         )
 
     def plan(self, layout: Layout) -> Plan:
@@ -88,28 +92,31 @@ class ScriptedExpert:
         scratch = self._mj.MjData(self.scene.model)
         home_ctrl = K.state_to_ctrl(self._home)
 
-        def arm_state(pos, grip):
+        def arm_state(pos, grip, vertical=True):
             scratch.qpos[:] = 0.0
             scratch.qpos[:6] = home_ctrl
             self._mj.mj_forward(self.scene.model, scratch)
-            q5 = self._ik_arm(scratch, pos)
+            q5 = self._ik_arm(scratch, pos, vertical)
             arm_deg = K.qpos_to_state(np.append(q5, 0.0))[:5]
             return np.append(arm_deg, grip).astype(np.float32)
 
         # Key setpoints (arm via position-only IK, gripper explicit). The weld
         # grasp makes orientation irrelevant, and position-only IK is the only
         # thing that reaches a low cube with this long gripper.
+        # Grasp phases are VERTICAL (claws straight down) for a stable, non-slip
+        # top-down grasp; carry/place phases use position-only IK so they can
+        # reach the far cup.
         home = self._home.copy()
-        pregrasp = arm_state((cx, cy, c.pregrasp_z), c.grip_open)
-        grasp = arm_state((cx, cy, c.grasp_z), c.grip_open)
+        pregrasp = arm_state((cx, cy, c.pregrasp_z), c.grip_open, vertical=True)
+        grasp = arm_state((cx, cy, c.grasp_z), c.grip_open, vertical=True)
         grasp_closed = grasp.copy()
         grasp_closed[5] = c.grip_closed
-        lift = arm_state((cx, cy, c.lift_z), c.grip_closed)
-        transport = arm_state((ux, uy, c.transport_z), c.grip_closed)
-        place = arm_state((ux, uy, c.place_z), c.grip_closed)
+        lift = arm_state((cx, cy, c.lift_z), c.grip_closed, vertical=True)
+        transport = arm_state((ux, uy, c.transport_z), c.grip_closed, vertical=False)
+        place = arm_state((ux, uy, c.place_z), c.grip_closed, vertical=False)
         release = place.copy()
         release[5] = c.grip_open
-        retreat = arm_state((ux, uy, c.retreat_z), c.grip_open)
+        retreat = arm_state((ux, uy, c.retreat_z), c.grip_open, vertical=False)
 
         # Stitch segments: (target_state, n_steps). Dwell = repeat same state.
         segs = [

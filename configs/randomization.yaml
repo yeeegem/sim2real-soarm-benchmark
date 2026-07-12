@@ -17,10 +17,13 @@ color_jitter:
   wall: 0.05
 
 camera:
+  # The real top camera is rigidly mounted above the arm, so keep it fixed
+  # (zero jitter). Set these >0 only if you want robustness to camera-pose
+  # calibration error.
   front:
-    pos_jitter: [0.04, 0.04, 0.03]
-    lookat_jitter: [0.03, 0.03, 0.02]
-    fovy_jitter: 4.0
+    pos_jitter: [0.0, 0.0, 0.0]
+    lookat_jitter: [0.0, 0.0, 0.0]
+    fovy_jitter: 0.0
   wrist:
     pos_jitter: [0.006, 0.006, 0.006]
     fovy_jitter: 5.0

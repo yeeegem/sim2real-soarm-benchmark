@@ -51,8 +51,8 @@ def _pose_grasp(scene: Scene, layout: Layout):
     sc.qpos[:6] = home
     mujoco.mj_forward(scene.model, sc)
     cx, cy = layout.cube_left_xy
-    q5 = ik.solve_ik(scene.model, sc, tcp, np.array([cx, cy, 0.02]), None,
-                     ori_weight=1e-6, damping=0.05)
+    q5 = ik.solve_ik(scene.model, sc, tcp, np.array([cx, cy, 0.02]), np.eye(3),
+                     ori_weight=0.5, damping=0.04)  # vertical top-down grasp
     scene.set_arm_state(np.append(K.qpos_to_state(np.append(q5, 0.0))[:5], 42.0))
 
 
