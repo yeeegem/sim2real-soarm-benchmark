@@ -13,7 +13,6 @@ outputs/
 wandb/
 
 # Rendered debug artifacts
-*.gif
 debug_frames/
 scratch/
 
