@@ -4,11 +4,15 @@ Train a **bimodal pick-and-place** policy **entirely in MuJoCo simulation**, the
 **zero-shot on the real SO-ARM101** and score it with the *same* operator-graded harness as the two
 sibling real-data benchmarks, so the numbers drop straight into the same comparison table.
 
-| Repo | Data source | Policy | Eval |
-|---|---|---|---|
-| [`multimodal-manipulation-benchmark`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | Tier-A operator |
-| [`smolvla-soarm-benchmark`](https://github.com/yeeegem/smolvla-soarm-benchmark) | real demos | SmolVLA | `soarm_eval` Tier-A operator |
-| **this repo** | **MuJoCo sim only** | LeRobot ACT (SmolVLA scaffolded) | `soarm_eval` Tier-A operator |
+| Repo | Data source | Policy | Success (Tier A) | Mode balance `\|P(left)-0.5\|` |
+|---|---|---|---|---|
+| [`multimodal-manipulation-benchmark`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | 63% | 0.50 (collapsed right) |
+| [`smolvla-soarm-benchmark`](https://github.com/yeeegem/smolvla-soarm-benchmark) | real demos | SmolVLA | 60% | 0.50 (collapsed right) |
+| **this repo** | **MuJoCo sim only** | LeRobot ACT (SmolVLA scaffolded) | **TBD** | **TBD** |
+
+All three are scored on the real arm with the same Tier-A operator protocol (`soarm_eval`). Mode
+balance is `|P(left) - 0.5|` among successful trials: 0 is a perfect 50/50 split, 0.5 is full collapse
+to one cube. Both sibling policies reached ~60% but collapsed to the right cube.
 
 ## The task
 

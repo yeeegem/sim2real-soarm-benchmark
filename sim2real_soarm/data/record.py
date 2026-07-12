@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -140,6 +141,77 @@ def record(
     return summary
 
 
+def _generate_shard(kwargs: dict) -> dict:
+    """Worker entry point: generate one shard dataset. Top-level so it is
+    picklable for the 'spawn' multiprocessing start method (needed for EGL)."""
+    return record(**kwargs)
+
+
+def record_parallel(
+    num_episodes: int,
+    out: Path,
+    repo_id: str = DEFAULT_REPO_ID,
+    task: str = DEFAULT_TASK,
+    seed: int = 0,
+    use_dr: bool = True,
+    workers: int = 8,
+    max_attempts: int | None = None,
+    overwrite: bool = False,
+) -> dict:
+    """Generate episodes across ``workers`` processes (each its own MuJoCo/EGL
+    context), then merge the shards into one dataset with LeRobot's
+    ``aggregate_datasets``. Episodes are independent, so this scales ~linearly
+    until GPU render / video-encode saturates."""
+    import concurrent.futures as cf
+    import multiprocessing as mp
+
+    from lerobot.datasets.aggregate import aggregate_datasets
+
+    out = Path(out)
+    if out.exists():
+        if overwrite:
+            shutil.rmtree(out)
+        else:
+            raise SystemExit(
+                f"Output dir already exists: {out}\n"
+                f"  Pass --overwrite to replace it, or use a different --out."
+            )
+
+    workers = max(1, min(workers, num_episodes))
+    per = [num_episodes // workers + (1 if i < num_episodes % workers else 0)
+           for i in range(workers)]
+    jobs, shard_roots, shard_repos = [], [], []
+    for i, n in enumerate(per):
+        if n == 0:
+            continue
+        sroot = out.parent / f".{out.name}_shard{i}"
+        srepo = f"{repo_id}_shard{i}"
+        shard_roots.append(sroot)
+        shard_repos.append(srepo)
+        jobs.append(dict(num_episodes=n, out=sroot, repo_id=srepo, task=task,
+                         seed=seed + i * 10007, use_dr=use_dr,
+                         max_attempts=max_attempts, overwrite=True))
+
+    print(f"Generating {num_episodes} episodes across {len(jobs)} workers...")
+    # ProcessPoolExecutor workers are non-daemonic, so each shard can still spawn
+    # LeRobot's video-encoding child processes (a Pool would forbid that).
+    with cf.ProcessPoolExecutor(max_workers=len(jobs),
+                                mp_context=mp.get_context("spawn")) as ex:
+        summaries = list(ex.map(_generate_shard, jobs))
+
+    kept = sum(s["kept"] for s in summaries)
+    chosen = {k: sum(s["chosen"][k] for s in summaries) for k in ("left", "right")}
+    print(f"Merging {len(shard_roots)} shards -> {out} ...")
+    aggregate_datasets(repo_ids=shard_repos, aggr_repo_id=repo_id,
+                       roots=shard_roots, aggr_root=out)
+    for r in shard_roots:
+        shutil.rmtree(r, ignore_errors=True)
+
+    p_left = chosen["left"] / max(kept, 1)
+    print(f"Done: {kept} episodes, mode balance left={p_left:.2f} -> {out}")
+    return {"kept": kept, "chosen": chosen, "p_left": p_left}
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--num-episodes", type=int, default=500)
@@ -151,12 +223,18 @@ def main(argv=None):
     p.add_argument("--max-attempts", type=int, default=None)
     p.add_argument("--overwrite", action="store_true",
                    help="replace the output dir if it already exists")
+    p.add_argument("--workers", type=int, default=1,
+                   help="parallel generation processes (shards merged at the end)")
     args = p.parse_args(argv)
-    record(
+    common = dict(
         num_episodes=args.num_episodes, out=Path(args.out), repo_id=args.repo_id,
         task=args.task, seed=args.seed, use_dr=not args.no_dr,
         max_attempts=args.max_attempts, overwrite=args.overwrite,
     )
+    if args.workers > 1:
+        record_parallel(**common, workers=args.workers)
+    else:
+        record(**common)
 
 
 if __name__ == "__main__":
