@@ -205,7 +205,7 @@ class Scene:
         # the fingertip depth it keeps the rest of the gripper above the table
         # (targeting a point between the finger bases would drive the long
         # fingers ~65 mm through the table -- unsafe on real hardware).
-        spec.body("gripper").add_site(name="tcp", pos=[0.0045, 0.0, -0.105])
+        spec.body("gripper").add_site(name="tcp", pos=[0.008, 0.0, -0.105])
 
         # Inactive welds used to model a reliable grasp (see attach/detach):
         # frictional grasping of a 3 cm cube is unreliable with this gripper's

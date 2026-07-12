@@ -26,14 +26,15 @@ CONTROL_HZ = 30.0
 @dataclass
 class ExpertConfig:
     grip_open: float = 42.0          # RANGE_0_100 (matches dataset open band)
-    grip_closed: float = 16.0        # ~30 mm claw gap: rests on the 3 cm cube's
-                                     # faces instead of driving the claws through it
+    grip_closed: float = 20.0        # ~37 mm claw gap: the claws sit around the
+                                     # 3 cm cube with a few mm clearance, not grazing it
     pregrasp_z: float = 0.075
     grasp_z: float = 0.020
     lift_z: float = 0.12
     transport_z: float = 0.13
-    place_z: float = 0.06
-    retreat_z: float = 0.14
+    place_z: float = 0.10       # release from above the cup rim (~0.075) so the
+                                # claws don't clip / tip the cup
+    retreat_z: float = 0.15
     # Per-segment durations in 30 Hz control steps.
     reach: int = 28
     descend: int = 16
