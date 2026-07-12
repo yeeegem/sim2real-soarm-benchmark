@@ -156,19 +156,41 @@ class Scene:
         wcam = cam["wrist"]
         parent = spec.body(wcam["parent_body"])
         wpos = np.asarray(wcam["pos"], float)
-        wquat = _quat_lookat(wpos, wcam["lookat_local"])
+        # Prefer an explicit local quat (community/official camera definitions
+        # give one); otherwise aim it via a local look-at point.
+        if "quat" in wcam:
+            wquat = np.asarray(wcam["quat"], float)
+        else:
+            wquat = _quat_lookat(wpos, wcam["lookat_local"])
         parent.add_camera(
             name="wrist", pos=wpos, quat=wquat,
             fovy=wcam["fovy"], resolution=[cam["width"], cam["height"]],
         )
-        # Visible camera-module mount (so you can see where the wrist cam sits).
-        # Offset just behind the lens along -view_dir so it doesn't block the view.
-        view_dir = np.asarray(wcam["lookat_local"], float) - wpos
-        view_dir /= np.linalg.norm(view_dir)
+        # Real white printed hex-nut camera mount (official SO101 STL, mm -> m)
+        # attached to the gripper, with the black camera module at the lens.
+        # Its transform (mount.pos/quat in the gripper local frame) is config-
+        # driven so it can be dialled in to clamp the wrist correctly.
+        # Wrap the mount mesh in its own child body so its pose is authored
+        # cleanly (MuJoCo recenters mesh *geoms* to their CoM, but not body
+        # frames) -- this makes scripts/tune_mount.py's printed body pose paste
+        # straight back into mount.pos/quat.
+        mcfg = wcam.get("mount", {})
+        spec.add_mesh(name="wrist_cam_mount_mesh", file="wrist_cam_mount.stl",
+                      scale=[0.001, 0.001, 0.001])
+        mount_body = parent.add_body(
+            name="wrist_cam_mount_body",
+            pos=mcfg.get("pos", [0.0, 0.045, 0.0]),
+            quat=mcfg.get("quat", [0.7071, -0.7071, 0.0, 0.0]),
+        )
+        mount_body.add_geom(
+            name="wrist_cam_mount", type=mj.mjtGeom.mjGEOM_MESH,
+            meshname="wrist_cam_mount_mesh",
+            rgba=[0.90, 0.90, 0.92, 1.0], contype=0, conaffinity=0, group=2,
+        )
         parent.add_geom(
-            name="wrist_cam_mount", type=mj.mjtGeom.mjGEOM_BOX,
-            pos=(wpos - 0.018 * view_dir).tolist(), quat=wquat,
-            size=[0.013, 0.018, 0.010], rgba=[0.05, 0.05, 0.05, 1.0],
+            name="wrist_cam_module", type=mj.mjtGeom.mjGEOM_BOX,
+            pos=wpos.tolist(), quat=wquat.tolist(),
+            size=[0.012, 0.012, 0.008], rgba=[0.05, 0.05, 0.05, 1.0],
             contype=0, conaffinity=0, group=2,
         )
 
@@ -306,12 +328,23 @@ class Scene:
         return K.qpos_to_state(self.data.qpos[:6])
 
     def attach(self, cube: str):
-        """Weld ``cube`` ('left'/'right') to the gripper at its current relative
-        pose -- a reliable grasp for clean demonstrations."""
+        """Weld ``cube`` ('left'/'right') to the gripper for a reliable, precise
+        grasp. The cube is first snapped to the grasp point (the ``tcp`` site,
+        between the fingers) so the grasp is exact regardless of position-control
+        tracking lag, then welded at that relative pose."""
         mj, m, d = self.mj, self.model, self.data
         eid = mj.mj_name2id(m, mj.mjtObj.mjOBJ_EQUALITY, f"weld_cube_{cube}")
         g = mj.mj_name2id(m, mj.mjtObj.mjOBJ_BODY, "gripper")
         cb = mj.mj_name2id(m, mj.mjtObj.mjOBJ_BODY, f"cube_{cube}")
+
+        # Snap the cube centre onto the grasp point so the grasp is precise.
+        tcp = mj.mj_name2id(m, mj.mjtObj.mjOBJ_SITE, "tcp")
+        adr = self._free_qadr[f"cube_{cube}"]
+        d.qpos[adr : adr + 3] = d.site_xpos[tcp]
+        dof = m.body_dofadr[cb]
+        d.qvel[dof : dof + 6] = 0.0
+        mj.mj_forward(m, d)
+
         R1 = d.xmat[g].reshape(3, 3)
         relpos = R1.T @ (d.xpos[cb] - d.xpos[g])
         q1 = np.zeros(4)
