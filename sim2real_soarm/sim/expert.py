@@ -26,7 +26,8 @@ CONTROL_HZ = 30.0
 @dataclass
 class ExpertConfig:
     grip_open: float = 42.0          # RANGE_0_100 (matches dataset open band)
-    grip_closed: float = 4.0         # squeezes a 3 cm cube via actuator force
+    grip_closed: float = 16.0        # ~30 mm claw gap: rests on the 3 cm cube's
+                                     # faces instead of driving the claws through it
     pregrasp_z: float = 0.075
     grasp_z: float = 0.020
     lift_z: float = 0.12
@@ -151,11 +152,16 @@ def _stitch(start: np.ndarray, segments) -> np.ndarray:
 
 # -- layout sampling (50/50 bimodal) -----------------------------------------
 
-def sample_layout(cfg: dict, rng: np.random.Generator) -> Layout:
-    """Sample cube/cup positions and a 50/50 left/right pick target."""
+def sample_layout(cfg: dict, rng: np.random.Generator, target: str | None = None) -> Layout:
+    """Sample cube/cup positions and a left/right pick target.
+
+    ``target`` forces which cube to pick (used to keep the recorded dataset
+    exactly 50/50); if None it is a random coin flip.
+    """
     cu, cp = cfg["cubes"], cfg["cup"]
     lx, ly = rng.uniform(*cu["x_range"]), rng.uniform(*cu["left_y_range"])
     rx, ry = rng.uniform(*cu["x_range"]), rng.uniform(*cu["right_y_range"])
     ux, uy = rng.uniform(*cp["x_range"]), rng.uniform(*cp["y_range"])
-    target = "left" if rng.random() < 0.5 else "right"
+    if target is None:
+        target = "left" if rng.random() < 0.5 else "right"
     return Layout((lx, ly), (rx, ry), (ux, uy), target=target)

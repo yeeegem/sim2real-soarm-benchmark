@@ -94,7 +94,10 @@ def record(
     chosen = {"left": 0, "right": 0}
     while kept < num_episodes and attempts < max_attempts:
         attempts += 1
-        layout = sample_layout(scene.cfg, rng)
+        # Force the under-represented side so the KEPT dataset is exactly ~50/50
+        # regardless of episode count (positions are still randomized).
+        forced = "left" if chosen["left"] <= chosen["right"] else "right"
+        layout = sample_layout(scene.cfg, rng, target=forced)
         scene.reset(layout)
         if dr:
             dr.apply(rng)

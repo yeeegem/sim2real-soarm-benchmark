@@ -194,12 +194,13 @@ class Scene:
             contype=0, conaffinity=0, group=2,
         )
 
-        # Grasp reference at the FINGERTIP (the lowest gripper vertex). Targeting
-        # the fingertip at a table cube keeps the rest of the gripper above the
-        # table (~+20 mm clearance); targeting a point between the finger bases
-        # instead would drive the long fingers ~65 mm through the table, which is
-        # unsafe to reproduce on real hardware.
-        spec.body("gripper").add_site(name="tcp", pos=[-0.012, 0.0, -0.104])
+        # Grasp reference at the CENTER between the two claw tips (at the ~3 cm
+        # grip opening), near the fingertips. Centering here makes the cube sit
+        # between the claws instead of one claw stabbing it, and because it is at
+        # the fingertip depth it keeps the rest of the gripper above the table
+        # (targeting a point between the finger bases would drive the long
+        # fingers ~65 mm through the table -- unsafe on real hardware).
+        spec.body("gripper").add_site(name="tcp", pos=[0.0045, 0.0, -0.105])
 
         # Inactive welds used to model a reliable grasp (see attach/detach):
         # frictional grasping of a 3 cm cube is unreliable with this gripper's
