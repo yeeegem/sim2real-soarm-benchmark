@@ -87,6 +87,11 @@ class Scene:
             jadr = self.model.body_jntadr[bid]
             self._free_qadr[name] = self.model.jnt_qposadr[jadr]
 
+        # Render options that hide site markers (the tcp/gripperframe sites would
+        # otherwise show as little spheres in the images).
+        self._scene_opt = mujoco.MjvOption()
+        self._scene_opt.sitegroup[:] = 0
+
         # Offscreen renderer (EGL). Skipped for the interactive GLFW viewer,
         # which would conflict with an EGL context in the same process.
         self._renderer = None
@@ -369,7 +374,7 @@ class Scene:
         self.data.eq_active[eid] = 0
 
     def render(self, camera: str) -> np.ndarray:
-        self._renderer.update_scene(self.data, camera=camera)
+        self._renderer.update_scene(self.data, camera=camera, scene_option=self._scene_opt)
         return self._renderer.render()
 
     def close(self):
