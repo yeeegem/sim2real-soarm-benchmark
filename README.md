@@ -1,7 +1,7 @@
 # sim2real-soarm-benchmark
 
-The purpuse of the project is to train a **bimodal pick-and-place** policy **entirely in MuJoCo simulation**, then deploy it
-**zero-shot on the real SO-ARM101** and score the success rate of the "Pick a cube and place in a cup" task on the real hardware.
+The purpose of the project is to train a **bimodal pick-and-place** policy **entirely in MuJoCo simulation**, then deploy it
+**zero-shot on the real SO-ARM101** and measure the success rate of the "Pick a cube and place it in a cup" task on the real hardware.
 
 ![episode](scene_views/episode0.gif)
 
@@ -10,16 +10,22 @@ The purpuse of the project is to train a **bimodal pick-and-place** policy **ent
 | ![top](scene_views/front.png) | ![wrist](scene_views/wrist.png) |
 
 
-Comparison of the same task but trained on the real recorded 100 episodes using Diffusion policy and a fine tuned SmolVLA (Flow matching) pocily:
-| Repo | Data source | Policy | Success (Tier A) | Mode balance `\|P(left)-0.5\|` |
+The same task trained on the 100 real recorded episodes with Diffusion Policy and a fine-tuned SmolVLA (flow-matching) policy:
+| Repo | Data source | Policy | Success rate | Mode balance `\|P(left)-0.5\|` |
 |---|---|---|---|---|
 | [`Diffusion policy`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | 63% | 0.50 (collapsed right) |
 | [`SmolVLA (Flow matching)`](https://github.com/yeeegem/smolvla-soarm-benchmark) | real demos | SmolVLA | 60% | 0.50 (collapsed right) |
-| **this repo** | **1000 episodes MuJoCo sim only** | LeRobot ACT (SmolVLA scaffolded) | **TBD** | **TBD** |
+| **this repo** | **1000 episodes MuJoCo sim only** | LeRobot ACT | **TBD** | **TBD** |
+| **this repo** | **1000 episodes MuJoCo sim only** | SmolVLA (fine-tuned) | **TBD** | **TBD** |
 
-All three are scored on the real arm with the same success rate evaluation. Mode
-balance is `|P(left) - 0.5|` among successful trials: 0 is a perfect 50/50 split, 0.5 is full collapse
-to one cube. Both sibling policies reached ~60% but collapsed to the right cube.
+All are evaluated on the real arm by the same success-rate measure. Mode balance is
+`|P(left) - 0.5|` among successful trials: 0 is a perfect 50/50 split, 0.5 is full collapse to one
+cube. Both real-data policies reached ~60% but collapsed to the right cube. Train the sim policies with:
+
+```bash
+scripts/train_act.sh        # LeRobot ACT       -> runs/act_sim
+scripts/train_smolvla.sh    # SmolVLA finetune  -> runs/smolvla_sim
+```
 
 ## The task
 
@@ -54,7 +60,7 @@ trained only on sim data runs on the real arm with no adaptation:
 2. **Units bridge**: convert between MuJoCo radians and LeRobot degrees / `RANGE_0_100` (`sim/kinematics.py`).
 3. **Scene**: table, white walls, 2 red cubes, procedural wall-ring blue cup, front and wrist cameras (`sim/scene.py`).
 4. **Scripted expert**: IK state machine, picks left/right 50/50 (`sim/expert.py`, `sim/ik.py`).
-5. **Domain randomization**: lighting, colors, textures, poses, camera, friction (`sim/randomization.py`).
+5. **Domain randomization**: lighting, colors, textures, object poses, wrist-camera pose, friction (`sim/randomization.py`).
 6. **Record**: run the expert under DR into a LeRobotDataset (`data/record.py`).
 7. **Train ACT**: `scripts/train_act.sh`.
 8. **Deploy and score**: `python -m sim2real_soarm.soarm_eval.run` on the real arm.
@@ -73,7 +79,7 @@ scripts/train_act.sh                     # writes runs/act_sim/checkpoints/...
 
 # 3. Deploy zero-shot on the REAL arm and score it (same harness as the siblings)
 uv run python -m sim2real_soarm.soarm_eval.run \
-    --checkpoint runs/act_sim/checkpoints/last/pretrained_model --tier A
+    --checkpoint runs/act_sim/checkpoints/last/pretrained_model
 uv run python -m sim2real_soarm.soarm_eval.metrics runs/act_sim/eval/results.csv
 
 # tests (headless MuJoCo)
