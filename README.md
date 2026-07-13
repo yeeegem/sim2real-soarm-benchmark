@@ -32,6 +32,10 @@ Render these yourself with `uv run python scripts/view_scene.py [--pose grasp]`.
 |---|---|
 | ![top](scene_views/front.png) | ![wrist](scene_views/wrist.png) |
 
+An example episode from the scripted expert (top camera):
+
+![episode](scene_views/episode0.gif)
+
 ## The one hard requirement
 
 The simulated dataset is **schema- and unit-identical** to the real dataset
