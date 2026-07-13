@@ -4,6 +4,12 @@ Train a **bimodal pick-and-place** policy **entirely in MuJoCo simulation**, the
 **zero-shot on the real SO-ARM101** and score it with the *same* operator-graded harness as the two
 sibling real-data benchmarks, so the numbers drop straight into the same comparison table.
 
+![episode](scene_views/episode0.gif)
+
+| Top camera (`front`) | Wrist camera |
+|---|---|
+| ![top](scene_views/front.png) | ![wrist](scene_views/wrist.png) |
+
 | Repo | Data source | Policy | Success (Tier A) | Mode balance `\|P(left)-0.5\|` |
 |---|---|---|---|---|
 | [`multimodal-manipulation-benchmark`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | 63% | 0.50 (collapsed right) |
@@ -25,16 +31,8 @@ headline metric is the **mode-balance score** `|P(left) - 0.5|` among successful
 
 White-printed SO-ARM101 on the near edge of a gray-blue table, boxed by white walls, with two red
 cubes and a blue cup. Two cameras (a top "front" camera and a wrist camera on the community-standard
-SO101 mount) give the exact `observation.images.front` / `observation.images.wrist` the policy uses.
-Render these yourself with `uv run python scripts/view_scene.py [--pose grasp]`.
-
-| Top camera (`front`) | Wrist camera |
-|---|---|
-| ![top](scene_views/front.png) | ![wrist](scene_views/wrist.png) |
-
-An example episode from the scripted expert (top camera):
-
-![episode](scene_views/episode0.gif)
+SO101 mount) give the exact `observation.images.front` / `observation.images.wrist` the policy uses
+(shown at the top). Render them yourself with `uv run python scripts/view_scene.py [--pose grasp]`.
 
 ## The one hard requirement
 
