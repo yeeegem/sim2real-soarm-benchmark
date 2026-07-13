@@ -28,7 +28,7 @@ MOTOR_NAMES = [
     "shoulder_pan.pos", "shoulder_lift.pos", "elbow_flex.pos",
     "wrist_flex.pos", "wrist_roll.pos", "gripper.pos",
 ]
-DEFAULT_TASK = "Blue cup and 2 red cubes"
+DEFAULT_TASK = "Pick up a red cube and put it in the blue cup"
 DEFAULT_REPO_ID = "sim/sim_redcubes_bluecup"
 
 
