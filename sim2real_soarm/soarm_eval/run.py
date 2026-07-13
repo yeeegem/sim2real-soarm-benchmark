@@ -96,7 +96,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--checkpoint", default=DEFAULT_CHECKPOINT,
                         help="Path to an ACT or SmolVLA pretrained_model/ dir.")
     parser.add_argument("--config", default=DEFAULT_CONFIG, help="Path to eval config YAML.")
-    parser.add_argument("--tier", required=True, choices=["A", "B", "C"], help="Evaluation tier.")
+    parser.add_argument("--tier", default="A", choices=["A", "B", "C"],
+                        help="Scene setup to score (default A: cubes in the trained layout).")
     parser.add_argument("--trials", type=int, default=None,
                         help="Trials for this tier (default: eval.num_trials_per_tier).")
     parser.add_argument("--output", default=None,

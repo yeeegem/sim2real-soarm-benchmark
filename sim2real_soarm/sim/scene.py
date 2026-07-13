@@ -199,17 +199,19 @@ class Scene:
             contype=0, conaffinity=0, group=2,
         )
 
-        # Grasp reference at the CENTER between the two claw tips (at the ~3 cm
-        # grip opening), near the fingertips. Centering here makes the cube sit
-        # between the claws instead of one claw stabbing it, and because it is at
-        # the fingertip depth it keeps the rest of the gripper above the table
-        # (targeting a point between the finger bases would drive the long
-        # fingers ~65 mm through the table -- unsafe on real hardware).
-        # Grasp centre placed so the cube's left face just meets the fixed jaw
-        # (inner face at local x=-0.0079) and the moving jaw (grip_closed) just
-        # meets the right face -> both claws contact a 3 cm cube snugly, no clip.
-        # The fixed jaw is stationary, so the cube necessarily rests against it.
-        spec.body("gripper").add_site(name="tcp", pos=[0.007, 0.0, -0.105])
+        # Two grasp-reference sites, both at the fingertip depth (z=-0.105) so
+        # the whole gripper stays above the table (a point between the finger
+        # bases would drive the long fingers ~65 mm through the table).
+        #
+        # On the real SO-ARM101 only the moving jaw actuates; the fixed jaw's
+        # inner face is stationary at local x=-0.0079. So we model a real grasp:
+        #  - `tcp` (x=0.015): the IK/approach target. With the cube here the
+        #    fixed jaw has ~8 mm clearance, so it won't hit the cube on descent.
+        #  - `grasp_snug` (x=0.007): where the moving jaw pushes the cube -- its
+        #    left face against the fixed jaw. attach() welds the cube here, so at
+        #    grasp the cube moves over to the fixed jaw and both claws touch it.
+        spec.body("gripper").add_site(name="tcp", pos=[0.015, 0.0, -0.105])
+        spec.body("gripper").add_site(name="grasp_snug", pos=[0.007, 0.0, -0.105])
 
         # Inactive welds used to model a reliable grasp (see attach/detach):
         # frictional grasping of a 3 cm cube is unreliable with this gripper's
@@ -350,10 +352,12 @@ class Scene:
         g = mj.mj_name2id(m, mj.mjtObj.mjOBJ_BODY, "gripper")
         cb = mj.mj_name2id(m, mj.mjtObj.mjOBJ_BODY, f"cube_{cube}")
 
-        # Snap the cube centre onto the grasp point so the grasp is precise.
-        tcp = mj.mj_name2id(m, mj.mjtObj.mjOBJ_SITE, "tcp")
+        # Snap the cube onto the snug grasp point (against the fixed jaw) so it
+        # moves over to the fixed jaw as the moving jaw closes -- a precise,
+        # realistic grasp.
+        snug = mj.mj_name2id(m, mj.mjtObj.mjOBJ_SITE, "grasp_snug")
         adr = self._free_qadr[f"cube_{cube}"]
-        d.qpos[adr : adr + 3] = d.site_xpos[tcp]
+        d.qpos[adr : adr + 3] = d.site_xpos[snug]
         dof = m.body_dofadr[cb]
         d.qvel[dof : dof + 6] = 0.0
         mj.mj_forward(m, d)
