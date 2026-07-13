@@ -36,10 +36,11 @@ class ExpertConfig:
     # -- gripper opening (RANGE_0_100) --------------------------------------
     grip_open: float = 42.0     # claws wide open while approaching/releasing
                                 # (~70 mm gap); matches the dataset's open band
-    grip_closed: float = 19.0   # holding a 3 cm cube: the moving jaw just meets
-                                # the cube's right face (~30 mm gap) while the
-                                # fixed jaw meets the left face. Larger -> looser
-                                # (visible gap); smaller -> claws clip the cube.
+    grip_closed: float = 19.0   # holding a 3 cm cube: the moving jaw meets the
+                                # cube's right face after the cube is snugged
+                                # against the fixed jaw (~30 mm gap; see the tcp /
+                                # grasp_snug sites in scene.py). Larger -> a visible
+                                # gap on the moving side; smaller -> it clips.
 
     # -- waypoint heights (m; grasp reference = tcp fingertip site) ----------
     pregrasp_z: float = 0.075   # hover directly above the cube before descending

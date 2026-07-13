@@ -54,6 +54,7 @@ def record(
     use_dr: bool = True,
     max_attempts: int | None = None,
     overwrite: bool = False,
+    label: str = "",
     n_substeps: int = 17,
 ) -> dict:
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
@@ -132,9 +133,11 @@ def record(
         ds.save_episode()
         kept += 1
         chosen[plan.target] += 1
-        if kept % 25 == 0 or kept == num_episodes:
-            print(f"  kept {kept}/{num_episodes} (attempts {attempts}) "
-                  f"left={chosen['left']} right={chosen['right']}")
+        # One flushed line per episode so progress is visible amid the noisy
+        # video-encoder logs (label distinguishes shards in parallel runs).
+        print(f"{label}episode {kept}/{num_episodes} ({100 * kept // num_episodes}%) "
+              f"| left={chosen['left']} right={chosen['right']} | attempts={attempts}",
+              flush=True)
 
     scene.close()
     p_left = chosen["left"] / max(kept, 1)
@@ -193,7 +196,8 @@ def record_parallel(
         shard_repos.append(srepo)
         jobs.append(dict(num_episodes=n, out=sroot, repo_id=srepo, task=task,
                          seed=seed + i * 10007, use_dr=use_dr,
-                         max_attempts=max_attempts, overwrite=True))
+                         max_attempts=max_attempts, overwrite=True,
+                         label=f"[shard {i}] "))
 
     print(f"Generating {num_episodes} episodes across {len(jobs)} workers...")
     # ProcessPoolExecutor workers are non-daemonic, so each shard can still spawn

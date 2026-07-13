@@ -1,8 +1,7 @@
 # sim2real-soarm-benchmark
 
-Train a **bimodal pick-and-place** policy **entirely in MuJoCo simulation**, then deploy it
-**zero-shot on the real SO-ARM101** and score it with the *same* operator-graded harness as the two
-sibling real-data benchmarks, so the numbers drop straight into the same comparison table.
+The purpuse of the project is to train a **bimodal pick-and-place** policy **entirely in MuJoCo simulation**, then deploy it
+**zero-shot on the real SO-ARM101** and score the success rate of the "Pick a cube and place in a cup" task on the real hardware.
 
 ![episode](scene_views/episode0.gif)
 
@@ -10,13 +9,15 @@ sibling real-data benchmarks, so the numbers drop straight into the same compari
 |---|---|
 | ![top](scene_views/front.png) | ![wrist](scene_views/wrist.png) |
 
+
+Comparison of the same task but trained on the real recorded 100 episodes using Diffusion policy and a fine tuned SmolVLA (Flow matching) pocily:
 | Repo | Data source | Policy | Success (Tier A) | Mode balance `\|P(left)-0.5\|` |
 |---|---|---|---|---|
-| [`multimodal-manipulation-benchmark`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | 63% | 0.50 (collapsed right) |
-| [`smolvla-soarm-benchmark`](https://github.com/yeeegem/smolvla-soarm-benchmark) | real demos | SmolVLA | 60% | 0.50 (collapsed right) |
-| **this repo** | **MuJoCo sim only** | LeRobot ACT (SmolVLA scaffolded) | **TBD** | **TBD** |
+| [`Diffusion policy`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | 63% | 0.50 (collapsed right) |
+| [`SmolVLA (Flow matching)`](https://github.com/yeeegem/smolvla-soarm-benchmark) | real demos | SmolVLA | 60% | 0.50 (collapsed right) |
+| **this repo** | **1000 episodes MuJoCo sim only** | LeRobot ACT (SmolVLA scaffolded) | **TBD** | **TBD** |
 
-All three are scored on the real arm with the same Tier-A operator protocol (`soarm_eval`). Mode
+All three are scored on the real arm with the same success rate evaluation. Mode
 balance is `|P(left) - 0.5|` among successful trials: 0 is a perfect 50/50 split, 0.5 is full collapse
 to one cube. Both sibling policies reached ~60% but collapsed to the right cube.
 
@@ -32,7 +33,7 @@ headline metric is the **mode-balance score** `|P(left) - 0.5|` among successful
 White-printed SO-ARM101 on the near edge of a gray-blue table, boxed by white walls, with two red
 cubes and a blue cup. Two cameras (a top "front" camera and a wrist camera on the community-standard
 SO101 mount) give the exact `observation.images.front` / `observation.images.wrist` the policy uses
-(shown at the top). Render them yourself with `uv run python scripts/view_scene.py [--pose grasp]`.
+(shown at the top).
 
 ## The one hard requirement
 
