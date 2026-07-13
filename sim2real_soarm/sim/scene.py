@@ -205,7 +205,11 @@ class Scene:
         # the fingertip depth it keeps the rest of the gripper above the table
         # (targeting a point between the finger bases would drive the long
         # fingers ~65 mm through the table -- unsafe on real hardware).
-        spec.body("gripper").add_site(name="tcp", pos=[0.008, 0.0, -0.105])
+        # Grasp centre placed so the cube's left face just meets the fixed jaw
+        # (inner face at local x=-0.0079) and the moving jaw (grip_closed) just
+        # meets the right face -> both claws contact a 3 cm cube snugly, no clip.
+        # The fixed jaw is stationary, so the cube necessarily rests against it.
+        spec.body("gripper").add_site(name="tcp", pos=[0.007, 0.0, -0.105])
 
         # Inactive welds used to model a reliable grasp (see attach/detach):
         # frictional grasping of a 3 cm cube is unreliable with this gripper's

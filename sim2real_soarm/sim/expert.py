@@ -25,26 +25,43 @@ CONTROL_HZ = 30.0
 
 @dataclass
 class ExpertConfig:
-    grip_open: float = 42.0          # RANGE_0_100 (matches dataset open band)
-    grip_closed: float = 20.0        # ~37 mm claw gap: the claws sit around the
-                                     # 3 cm cube with a few mm clearance, not grazing it
-    pregrasp_z: float = 0.075
-    grasp_z: float = 0.020
-    lift_z: float = 0.12
-    transport_z: float = 0.13
-    place_z: float = 0.10       # release from above the cup rim (~0.075) so the
-                                # claws don't clip / tip the cup
-    retreat_z: float = 0.15
-    # Per-segment durations in 30 Hz control steps.
-    reach: int = 28
-    descend: int = 16
-    grip_dwell: int = 12
-    lift: int = 16
-    transport: int = 32
-    place: int = 16
-    release_dwell: int = 12
-    retreat: int = 12
-    ret_home: int = 30
+    """Tunable constants for the scripted pick-and-place.
+
+    Gripper values are in LeRobot RANGE_0_100 (0 = fully closed, 100 = fully
+    open); the gap between the claws grows with the value. Heights (``*_z``) are
+    the z of the grasp reference (the ``tcp`` fingertip site, see scene.py) in
+    metres, table top at z=0. Durations are in 30 Hz control steps.
+    """
+
+    # -- gripper opening (RANGE_0_100) --------------------------------------
+    grip_open: float = 42.0     # claws wide open while approaching/releasing
+                                # (~70 mm gap); matches the dataset's open band
+    grip_closed: float = 19.0   # holding a 3 cm cube: the moving jaw just meets
+                                # the cube's right face (~30 mm gap) while the
+                                # fixed jaw meets the left face. Larger -> looser
+                                # (visible gap); smaller -> claws clip the cube.
+
+    # -- waypoint heights (m; grasp reference = tcp fingertip site) ----------
+    pregrasp_z: float = 0.075   # hover directly above the cube before descending
+    grasp_z: float = 0.020      # fingertip at the cube (its centre is z=0.015);
+                                # the whole gripper stays above the table here
+    lift_z: float = 0.12        # straight up after grasping, clear of the table
+    transport_z: float = 0.13   # carry height while moving over to the cup
+    place_z: float = 0.10       # release height: above the cup rim (~0.075) so
+                                # the claws drop the cube in without clipping/
+                                # tipping the cup
+    retreat_z: float = 0.15     # lift away after releasing, then return home
+
+    # -- per-segment durations (30 Hz control steps) ------------------------
+    reach: int = 28             # home -> pregrasp (above the cube)
+    descend: int = 16           # pregrasp -> grasp (down onto the cube)
+    grip_dwell: int = 12        # hold while the claws close (cube welded here)
+    lift: int = 16              # grasp -> lift
+    transport: int = 32         # lift -> over the cup
+    place: int = 16             # descend toward the cup to the release height
+    release_dwell: int = 12     # hold while the claws open (cube released here)
+    retreat: int = 12           # release -> retreat up
+    ret_home: int = 30          # retreat -> home pose
 
 
 @dataclass
