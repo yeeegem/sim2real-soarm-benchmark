@@ -83,6 +83,7 @@ def record(
     rng = np.random.default_rng(seed)
     dr_cfg = dr.cfg if dr else {}
     obs_noise = float(dr_cfg.get("observation_noise_deg", 0.0)) if dr else 0.0
+    state_dropout = float(dr_cfg.get("state_dropout_prob", 0.0)) if dr else 0.0
 
     ds = LeRobotDataset.create(
         repo_id=repo_id, fps=30, features=build_features(),
@@ -109,6 +110,11 @@ def record(
             state = scene.get_state().astype(np.float32)
             if obs_noise:
                 state[:5] += rng.normal(0, obs_noise, 5).astype(np.float32)
+            # Sensor dropout: occasionally blank the whole state so the policy
+            # learns to act from the cameras alone (breaks the proprioceptive
+            # shortcut). The action target is left intact.
+            if state_dropout and rng.random() < state_dropout:
+                state[:] = 0.0
             frames.append({
                 "observation.images.front": scene.render("front"),
                 "observation.images.wrist": scene.render("wrist"),

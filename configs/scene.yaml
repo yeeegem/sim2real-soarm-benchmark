@@ -35,10 +35,18 @@ cubes:
   friction: [1.0, 0.02, 0.001]
   z: 0.015              # rests on the table
   # Sampling regions (metres) for left (+y) and right (-y) cubes. Smaller x =
-  # closer to the arm; the cup sits farther out (see cup.x_range).
-  x_range: [0.17, 0.23]
-  left_y_range: [0.07, 0.14]
-  right_y_range: [-0.14, -0.07]
+  # closer to the arm; the cup sits farther out (see cup.x_range). Widened so a
+  # single "average" reach can no longer land on a cube -> the policy must
+  # localize it from the cameras (breaks the proprioceptive shortcut). A gap is
+  # kept around y=0 so left/right stay distinct and clear of the cup.
+  x_range: [0.16, 0.26]
+  left_y_range: [0.05, 0.16]
+  right_y_range: [-0.16, -0.05]
+  # Per-cube yaw (radians) sampled each episode. A cube has 90-deg symmetry, so
+  # +/-45 deg spans every distinct appearance -> more visual variety without the
+  # rotated footprint overlapping neighbours. The top-down weld grasp is
+  # unaffected by cube yaw.
+  yaw_range: [-0.785, 0.785]
 
 cup:
   # Procedural wall-ring: bottom disk + n_segments thin box walls.

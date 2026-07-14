@@ -7,7 +7,7 @@ __pycache__/
 .ruff_cache/
 
 # Generated data + training artifacts (large)
-recordings/
+recordings*/
 runs/
 outputs/
 wandb/

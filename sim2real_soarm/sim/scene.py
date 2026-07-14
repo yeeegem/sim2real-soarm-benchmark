@@ -63,6 +63,8 @@ class Layout:
     cube_right_xy: tuple[float, float]
     cup_xy: tuple[float, float]
     target: str  # "left" or "right"
+    cube_left_yaw: float = 0.0    # per-cube table rotation (radians)
+    cube_right_yaw: float = 0.0
 
 
 class Scene:
@@ -325,8 +327,8 @@ class Scene:
     def reset(self, layout: Layout, init_state: np.ndarray | None = None):
         self.mj.mj_resetData(self.model, self.data)
         cu = self.cfg["cubes"]
-        self._set_free_pose("cube_left", layout.cube_left_xy, cu["z"])
-        self._set_free_pose("cube_right", layout.cube_right_xy, cu["z"])
+        self._set_free_pose("cube_left", layout.cube_left_xy, cu["z"], layout.cube_left_yaw)
+        self._set_free_pose("cube_right", layout.cube_right_xy, cu["z"], layout.cube_right_yaw)
         self._set_free_pose("cup", layout.cup_xy, 0.0)
         state = init_state if init_state is not None else np.array(self.cfg["init_pose"]["state"], float)
         self.set_arm_state(state)

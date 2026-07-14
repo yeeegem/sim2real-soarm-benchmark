@@ -16,6 +16,8 @@ BATCH_SIZE="${BATCH_SIZE:-8}"
 uv run lerobot-train \
   --policy.type=act \
   --policy.push_to_hub=false \
+  --policy.chunk_size=100 \
+  --policy.n_action_steps=20 \
   --dataset.repo_id="${DATASET_REPO_ID}" \
   --dataset.root="${DATASET_ROOT}" \
   --batch_size="${BATCH_SIZE}" \

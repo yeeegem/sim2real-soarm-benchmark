@@ -9,8 +9,12 @@
 policy:
   type: act
   chunk_size: 100          # action chunk ACT predicts
-  n_action_steps: 100      # steps executed before replanning
-  n_obs_steps: 1
+  n_action_steps: 20       # steps executed before re-observing (was 100: a full
+                           # 3.3 s open-loop chunk let it replay a stale plan and
+                           # ignore the cameras). 20 -> it re-reads the cameras ~5x
+                           # more often and must track the cube. Inference-only
+                           # param, but set at train time so the checkpoint carries it.
+  n_obs_steps: 1           # ACT supports only 1 (LeRobot raises for >1)
   vision_backbone: resnet18
   dim_model: 512
   n_heads: 8

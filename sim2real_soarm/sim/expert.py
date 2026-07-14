@@ -181,6 +181,9 @@ def sample_layout(cfg: dict, rng: np.random.Generator, target: str | None = None
     lx, ly = rng.uniform(*cu["x_range"]), rng.uniform(*cu["left_y_range"])
     rx, ry = rng.uniform(*cu["x_range"]), rng.uniform(*cu["right_y_range"])
     ux, uy = rng.uniform(*cp["x_range"]), rng.uniform(*cp["y_range"])
+    yaw_range = cu.get("yaw_range", [0.0, 0.0])
+    lyaw, ryaw = rng.uniform(*yaw_range), rng.uniform(*yaw_range)
     if target is None:
         target = "left" if rng.random() < 0.5 else "right"
-    return Layout((lx, ly), (rx, ry), (ux, uy), target=target)
+    return Layout((lx, ly), (rx, ry), (ux, uy), target=target,
+                  cube_left_yaw=float(lyaw), cube_right_yaw=float(ryaw))
