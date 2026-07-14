@@ -27,6 +27,13 @@ scripts/train_act.sh        # LeRobot ACT       -> runs/act_sim
 scripts/train_smolvla.sh    # SmolVLA finetune  -> runs/smolvla_sim
 ```
 
+Both policies train cleanly on the 1000-episode sim dataset (174K frames). ACT (100K steps,
+bs=8) and SmolVLA (20K steps, bs=32, fine-tuned from `lerobot/smolvla_base`) both converge; on
+the shared epoch axis SmolVLA reaches a lower action loss with a smaller gradient norm, as expected
+from its pretraining.
+
+![learning curves](scene_views/learning_curves.png)
+
 ## The task
 
 Two identical 3 cm **red cubes** (left / right) and one **blue cup** on a gray-blue table with white
