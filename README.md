@@ -84,14 +84,49 @@ uv run python scripts/replay_dataset.py --episode 0 --out episode0.gif   # sanit
 # 2. Train ACT entirely on the sim data
 scripts/train_act.sh                     # writes runs/act_sim/checkpoints/...
 
-# 3. Deploy zero-shot on the REAL arm and score it (same harness as the siblings)
-uv run python -m sim2real_soarm.soarm_eval.run \
-    --checkpoint runs/act_sim/checkpoints/last/pretrained_model
-uv run python -m sim2real_soarm.soarm_eval.metrics runs/act_sim/eval/results.csv
+# 3. Deploy zero-shot on the REAL arm and score it (see "Running on the arm")
 
 # tests (headless MuJoCo)
 MUJOCO_GL=egl uv run --extra dev pytest tests/ -q
 ```
+
+## Running on the arm
+
+`soarm_eval/` is a human-in-the-loop evaluation harness: it drives the trained checkpoint on the
+real SO-ARM101, and you score each trial success or failure. It logs an operator-scored
+`results.csv` (success rate plus the left/right mode balance).
+
+Robot port and camera device paths live in `configs/eval_real.yaml`. Edit `robot_port` and the
+camera `path`s to match your setup. The language instruction is read automatically from the dataset
+metadata, so it matches what the policy saw during training.
+
+```bash
+# ACT checkpoint
+uv run python -m sim2real_soarm.soarm_eval.run \
+    --checkpoint runs/act_sim/checkpoints/last/pretrained_model \
+    --config configs/eval_real.yaml
+
+# SmolVLA checkpoint (same command, the loader dispatches on the checkpoint config)
+uv run python -m sim2real_soarm.soarm_eval.run \
+    --checkpoint runs/smolvla_sim/checkpoints/last/pretrained_model \
+    --config configs/eval_real.yaml
+```
+
+The `--checkpoint` is a `pretrained_model/` **directory**, not a `.pt` file. The harness homes the
+arm, runs the episode (press Enter to end it, or it auto-stops after `eval.max_episode_steps`),
+auto-returns the arm, then prompts you to score the trial. Each scored trial is appended to
+`runs/<run>/eval/results.csv` immediately, so an interrupted run resumes where it left off. Pass
+`--debug-frames` to dump the first trial's camera images to check camera identity, color, and
+orientation against what the policy expects.
+
+Aggregate a run's CSV into summary tables:
+
+```bash
+uv run python -m sim2real_soarm.soarm_eval.metrics runs/act_sim/eval/results.csv
+```
+
+This writes `metrics.json` and `tables.md` (success rate, mean success time, failure breakdown, and
+the left/right mode-balance score) next to the CSV.
 
 ## Notes on the sim grasp
 
