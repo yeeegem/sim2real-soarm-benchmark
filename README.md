@@ -32,7 +32,8 @@ bs=8) and SmolVLA (20K steps, bs=32, fine-tuned from `lerobot/smolvla_base`) bot
 the shared epoch axis SmolVLA reaches a lower action loss with a smaller gradient norm, as expected
 from its pretraining.
 
-![learning curves](scene_views/learning_curves.png)
+![learning curves SIM only](scene_views/learning_curves_sim.png)
+![learning curves SIM+REAL](scene_views/learning_curves_mix.png)
 
 ## The task
 
