@@ -28,22 +28,9 @@ samples one real mode instead of averaging.
 
 All are evaluated on the real arm by the same success-rate measure. Mode balance is
 `|P(left) - 0.5|` among successful trials: 0 is a perfect 50/50 split, 0.5 is full collapse to one
-cube. Both real-data policies reached ~60% but collapsed to the right cube. Train the sim policies with:
+cube. Both real-data policies reached ~60% but collapsed to the right cube.
 
-```bash
-scripts/train_act.sh        # LeRobot ACT       -> runs/act_sim
-scripts/train_smolvla.sh    # SmolVLA finetune  -> runs/smolvla_sim
-```
-
-Both policies train cleanly on the 1000-episode sim dataset (174K frames). ACT (100K steps,
-bs=8) and SmolVLA (20K steps, bs=32, fine-tuned from `lerobot/smolvla_base`) both converge; on
-the shared epoch axis SmolVLA reaches a lower action loss with a smaller gradient norm, as expected
-from its pretraining.
-
-![learning curves SIM only](scene_views/learning_curves_sim.png)
-![learning curves SIM+REAL](scene_views/learning_curves_mix.png)
-
-## Failure modes: real-only vs sim+real co-training
+### Failure modes: real-only vs sim+real co-training
 
 Operator-scored failure breakdown on the real arm (counts, with share of all trials in that run).
 Trial counts differ between the two runs.
@@ -62,6 +49,8 @@ often), but the dominant failure shifts to *grasp slip* (0% to 30%): the sim dem
 weld-grasp abstraction and never teach robust frictional grasping, so the co-trained policy inherits
 precise reaching but a less stable physical grip.
 
+### If grasp slips counted as successes
+
 A grasp slip means the arm reached, closed on, and lifted the *correct* cube but dropped it in
 transport, so the perception and planning were right and only the physical grip failed. If those
 near-misses are counted as successes, the picture is:
@@ -74,6 +63,21 @@ near-misses are counted as successes, the picture is:
 This is a hypothetical, not the scored result, but it localizes the remaining gap: for the co-trained
 policy it is grasp *stability* (addressable with a better sim contact model or a handful of real grasp
 demos), not sim-to-real transfer of reaching and object selection.
+
+Train the sim policies with:
+
+```bash
+scripts/train_act.sh        # LeRobot ACT       -> runs/act_sim
+scripts/train_smolvla.sh    # SmolVLA finetune  -> runs/smolvla_sim
+```
+
+Both policies train cleanly on the 1000-episode sim dataset (174K frames). ACT (100K steps,
+bs=8) and SmolVLA (20K steps, bs=32, fine-tuned from `lerobot/smolvla_base`) both converge; on
+the shared epoch axis SmolVLA reaches a lower action loss with a smaller gradient norm, as expected
+from its pretraining.
+
+![learning curves SIM only](scene_views/learning_curves_sim.png)
+![learning curves SIM+REAL](scene_views/learning_curves_mix.png)
 
 ## The task
 
