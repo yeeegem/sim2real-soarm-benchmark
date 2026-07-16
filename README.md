@@ -15,8 +15,16 @@ The same task trained on the 100 real recorded episodes with Diffusion Policy an
 |---|---|---|---|---|
 | [`Diffusion policy`](https://github.com/yeeegem/multimodal-manipulation-benchmark) | real demos | Diffusion Policy | 63% | 0.50 (collapsed right) |
 | [`SmolVLA (Flow matching)`](https://github.com/yeeegem/smolvla-soarm-benchmark) | real demos | SmolVLA | 60% | 0.50 (collapsed right) |
-| **this repo** | **1000 episodes MuJoCo sim only** | LeRobot ACT | **TBD** | **TBD** |
-| **this repo** | **1000 episodes MuJoCo sim only** | SmolVLA (fine-tuned) | **TBD** | **TBD** |
+| **this repo** | **1000 episodes MuJoCo sim only** | LeRobot ACT | **0% (collapsed to the mean trajectory)** | **n/a (no successes)** |
+| **this repo** | **1000 episodes MuJoCo sim only** | SmolVLA (fine-tuned) | **0% (0/5, grabbed nothing)** | **n/a (no successes)** |
+| **this repo** | **1000 sim + 100 real, co-trained (real oversampled 3x)** | SmolVLA | **53% (16/30)** | **0.50 (collapsed right)** |
+
+**Why ACT averages the trajectory:** ACT trains with an L1 reconstruction loss and runs deterministic
+inference with its CVAE latent fixed to the prior mean (`z = 0`). With two identical cubes the
+demonstrations are bimodal (reach left *or* right), and L1 regression with a fixed latent averages the
+two modes instead of committing to one, so the policy drives down the middle path between the cubes and
+grasps nothing. SmolVLA's flow-matching objective models the full multimodal action distribution, so it
+samples one real mode instead of averaging.
 
 All are evaluated on the real arm by the same success-rate measure. Mode balance is
 `|P(left) - 0.5|` among successful trials: 0 is a perfect 50/50 split, 0.5 is full collapse to one
@@ -34,6 +42,38 @@ from its pretraining.
 
 ![learning curves SIM only](scene_views/learning_curves_sim.png)
 ![learning curves SIM+REAL](scene_views/learning_curves_mix.png)
+
+## Failure modes: real-only vs sim+real co-training
+
+Operator-scored failure breakdown on the real arm (counts, with share of all trials in that run).
+Trial counts differ between the two runs.
+
+| Failure mode | SmolVLA, 100 real demos (20 trials) | SmolVLA, 1000 sim + 3x100 real (30 trials) |
+|---|---|---|
+| grabbed nothing | 7 (35%) | 4 (13%) |
+| grasp slip | 0 | 9 (30%) |
+| grasped wrong object | 1 (5%) | 0 |
+| collision / unsafe | 0 | 1 (3%) |
+| **total failures** | **8/20 (40%)** | **14/30 (47%)** |
+| **success** | **12/20 (60%)** | **16/30 (53%)** |
+
+Co-training cuts *grabbed nothing* from 35% to 13% (the arm reaches and closes on the cube far more
+often), but the dominant failure shifts to *grasp slip* (0% to 30%): the sim demonstrations use a
+weld-grasp abstraction and never teach robust frictional grasping, so the co-trained policy inherits
+precise reaching but a less stable physical grip.
+
+A grasp slip means the arm reached, closed on, and lifted the *correct* cube but dropped it in
+transport, so the perception and planning were right and only the physical grip failed. If those
+near-misses are counted as successes, the picture is:
+
+| Policy | Success (as scored) | Success (grasp slip counted as success) |
+|---|---|---|
+| SmolVLA, 100 real demos (20 trials) | 60% (12/20) | 60% (12/20) |
+| SmolVLA, 1000 sim + 3x100 real (30 trials) | 53% (16/30) | **83% (25/30)** |
+
+This is a hypothetical, not the scored result, but it localizes the remaining gap: for the co-trained
+policy it is grasp *stability* (addressable with a better sim contact model or a handful of real grasp
+demos), not sim-to-real transfer of reaching and object selection.
 
 ## The task
 
