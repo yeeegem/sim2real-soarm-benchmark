@@ -141,6 +141,10 @@ MUJOCO_GL=egl uv run --extra dev pytest tests/ -q
 real SO-ARM101, and you score each trial success or failure. It logs an operator-scored
 `results.csv` (success rate plus the left/right mode balance).
 
+<video src="scene_views/eval_process.mp4" controls width="640"></video>
+
+[eval_process.mp4](scene_views/eval_process.mp4) — the eval process on the real arm.
+
 Robot port and camera device paths live in `configs/eval_real.yaml`. Edit `robot_port` and the
 camera `path`s to match your setup. The language instruction is read automatically from the dataset
 metadata, so it matches what the policy saw during training.
